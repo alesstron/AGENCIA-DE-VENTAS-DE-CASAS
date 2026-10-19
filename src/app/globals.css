@@ -1,0 +1,64 @@
+@import "tailwindcss";
+
+@theme {
+  --color-warm-cream: #ffedd7;
+  --color-walnut-shadow: #100904;
+  --color-bark-brown: #382416;
+  --color-cork-border: #40372e;
+  --color-driftwood: #6c5f51;
+  --color-ember-accent: #dc5000;
+
+  --font-sans: "Inter", ui-sans-serif, system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+
+  --radius-card: 12px;
+  --radius-outlined: 22.5px;
+  --radius-pill: 36px;
+}
+
+html,
+body {
+  background: var(--color-walnut-shadow);
+  color: var(--color-warm-cream);
+  font-family: var(--font-sans);
+  font-feature-settings: "ss01" on;
+  overflow-x: hidden;
+  width: 100%;
+  max-width: 100%;
+}
+
+::selection {
+  background: var(--color-bark-brown);
+  color: var(--color-warm-cream);
+}
+
+.hide-scrollbar {
+  scrollbar-width: none;
+}
+.hide-scrollbar::-webkit-scrollbar {
+  display: none;
+}
+
+/* Tipografía del sistema: mayúsculas, peso 500 */
+.label {
+  text-transform: uppercase;
+  font-weight: 500;
+  font-size: 12px;
+  line-height: 1.2;
+}
+.display {
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 0.9;
+  font-size: clamp(34px, 9vw, 51px);
+}
+.heading {
+  text-transform: uppercase;
+  font-weight: 500;
+  line-height: 0.9;
+  font-size: clamp(26px, 6vw, 41px);
+}
+.body-copy {
+  font-weight: 400;
+  line-height: 1.26;
+  font-size: clamp(17px, 3.6vw, 24px);
+}
