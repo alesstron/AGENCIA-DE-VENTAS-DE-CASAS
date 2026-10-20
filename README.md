@@ -1,4 +1,4 @@
-# Dubai Luxury Estates — Portal Inmobiliario de Alto Lujo (Dubai & Caracas VIP)
+# Agencia Inmobiliaria de Alto Lujo (Dubai & Caracas VIP)
 
 Portal web para una agencia inmobiliaria de alto lujo con catálogo internacional: **8 propiedades en Dubái** y **4 en Caracas**. Combina una presentación editorial oscura (walnut / crema), fichas técnicas densas orientadas a inversionistas, precios multi-moneda en tiempo real y contacto directo por WhatsApp Business, con maquetación estrictamente mobile-first.
 
@@ -17,10 +17,11 @@ Portal web para una agencia inmobiliaria de alto lujo con catálogo internaciona
 - **Rutas dinámicas** `/propiedades/[id]`: fichas generadas estáticamente para todo el catálogo.
 - **Selector multi-moneda en tiempo real**: USD `$`, EUR `€` y VES `Bs.`; tasas desde `/api/rates` (open.er-api.com, caché de 1 h, respaldo estático), elección persistida en `localStorage`. Equivalencia AED con `USD_TO_AED = 3.6725`.
 - **Ficha técnica densa**: matriz de inversión (ROI), planos con selector de nivel (incl. Rooftop/Piscina), inventario, especificaciones de lujo, amenidades con iconos y entorno VIP. *Las cifras de inversión y distancias son ilustrativas.*
-- **Integración universal con WhatsApp Business** vía `https://api.whatsapp.com/send?phone=…&text=…`; el mensaje incluye la propiedad y el precio en la moneda elegida.
+- **Integración universal con WhatsApp Business** (número `584245535901`) vía `https://api.whatsapp.com/send?phone=…&text=…`; el mensaje incluye la propiedad y el precio en la moneda elegida.
 - **Animaciones 3D con perspectiva**: tilt con glare (solo ratón), revelaciones al hacer scroll con blur-to-clear, contadores animados; rotaciones ≤ 8° y `prefers-reduced-motion` respetado.
 - **Maquetación mobile-first estricta**: cero scroll horizontal, carruseles táctiles, tarjetas apiladas en móvil y grid desde `md:`.
-- Catálogo con hero, filtros (tipo, precio, ciudad/zona) y búsqueda.
+- **Catálogo exclusivo**: Dubái (Palm Jumeirah, Downtown Dubai, Emirates Hills, Dubai Marina, Jumeirah Bay, DIFC, Al Barari, Bluewaters) y Caracas (Country Club, Altamira, La Lagunita, Las Mercedes), con hero, filtros (tipo, precio, ciudad/zona) y búsqueda.
+- **Detalle optimizado**: galería `16/9` con proporciones ajustadas (máx. 480–500 px) y ficha técnica con ROI, planos y especificaciones de acabados.
 
 ## Estructura
 
