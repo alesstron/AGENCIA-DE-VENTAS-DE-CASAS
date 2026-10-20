@@ -38,6 +38,8 @@ Sistema visual: `DESIGN.MD/DESIGN.md` (walnut `#100904`, crema `#ffedd7`, bark `
 - Nuevas propiedades: añadir a `src/data/properties.ts` (con `ciudad`), imágenes verificadas HTTP 200; `generateStaticParams` las recoge solo.
 - Antes de cada push: `npm run build` sin errores. Si falla por memoria, comprobar `NODE_OPTIONS` del entorno.
 - Despliegue: GitHub `main` → Vercel (preset Next.js, sin variables de entorno).
+- Comentarios: todo el código fuente lleva comentarios en español (cabecera de archivo con propósito y flujo de datos + notas en la lógica no obvia). Mantenerlos al modificar código; los comentarios obsoletos cuentan como regresión.
+- Build en Windows con poca RAM: si `next build` falla con 'heap out of memory' en la generación estática, cerrar procesos (p. ej. `npm run dev`) y reintentar.
 
 ## Registro de avance
 - [x] Datos de 8 propiedades con galería Unsplash verificada (HTTP 200).

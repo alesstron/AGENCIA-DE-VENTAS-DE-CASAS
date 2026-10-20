@@ -1,13 +1,22 @@
 "use client";
 
+/**
+ * Catálogo de la página de inicio (Client Component porque usa estado y animaciones).
+ *  1. Hero a pantalla completa con imagen en parallax (scrollY -> y) y entrada 3D escalonada.
+ *  2. Panel de filtros: chips de tipo (carrusel táctil), búsqueda de texto, ciudad, zona y rango de precio.
+ *  3. Grid animado de PropertyCard dentro de TiltCard; los filtros se aplican en `lista` (useMemo).
+ * La moneda mostrada en cada tarjeta viene del CurrencyProvider del layout.
+ */
 import { useMemo, useState } from "react";
 import { AnimatePresence, motion, useScroll, useTransform } from "framer-motion";
 import { properties, type PropertyType } from "@/data/properties";
 import PropertyCard from "./PropertyCard";
 import { DUR, EASE, TiltCard } from "./motion";
 
+// Opciones del filtro por tipo.
 const TIPOS: ("Todas" | PropertyType)[] = ["Todas", "Villa", "Penthouse", "Mansión"];
 
+// Rangos de precio en USD (el precio de lista siempre se guarda en USD, sea cual sea la moneda mostrada).
 const RANGOS = [
   { label: "Cualquier precio", min: 0, max: Infinity },
   { label: "Hasta $5 M USD", min: 0, max: 5e6 },
@@ -16,24 +25,30 @@ const RANGOS = [
   { label: "Más de $30 M USD", min: 30e6, max: Infinity },
 ];
 
+// Opciones del filtro por ciudad.
 const CIUDADES = ["Todas", "Dubái", "Caracas"] as const;
 
+// Estilo de campos: solo borde inferior (norma del sistema de diseño).
 const fieldClass =
   "label w-full rounded-none border-0 border-b border-warm-cream bg-transparent px-0.5 py-2 text-warm-cream outline-none placeholder:text-driftwood focus:border-b-2";
 
 export default function Catalog() {
+  // Estado de los filtros (todos parten en "Todas"/"Cualquier precio").
   const [tipo, setTipo] = useState<(typeof TIPOS)[number]>("Todas");
   const [ciudad, setCiudad] = useState<(typeof CIUDADES)[number]>("Todas");
   const [zona, setZona] = useState("Todas");
   const [rango, setRango] = useState(0);
+  // Zonas disponibles: dependen de la ciudad elegida (se recalculan al cambiarla).
   const zonas = useMemo(
     () => ["Todas", ...Array.from(new Set(properties.filter((p) => ciudad === "Todas" || p.ciudad === ciudad).map((p) => p.zona)))],
     [ciudad],
   );
   const [q, setQ] = useState("");
+  // Parallax del hero: la imagen baja hasta 120 px durante los primeros 700 px de scroll.
   const { scrollY } = useScroll();
   const bgY = useTransform(scrollY, [0, 700], [0, 120]);
 
+  // Propiedades filtradas: todas las condiciones deben cumplirse; la búsqueda compara título, ubicación y referencia.
   const lista = useMemo(() => {
     const r = RANGOS[rango];
     const term = q.trim().toLowerCase();
@@ -50,6 +65,7 @@ export default function Catalog() {
 
   return (
     <>
+      {/* HERO: imagen de fondo con entrada blur-to-clear y degradado para legibilidad del texto */}
       <section className="relative flex min-h-[calc(100svh-53px)] w-full max-w-full flex-col justify-end overflow-hidden bg-walnut-shadow">
         <motion.div
           initial={{ scale: 1.2, filter: "blur(14px)", opacity: 0.4 }}
@@ -67,6 +83,7 @@ export default function Catalog() {
         <div className="absolute inset-0 bg-gradient-to-t from-walnut-shadow via-walnut-shadow/60 to-walnut-shadow/20" />
 
         <div className="relative flex w-full max-w-full flex-col gap-8 px-5 pb-10 pt-24 md:px-10">
+          {/* Textos del hero: entrada escalonada (staggerChildren) con rotación 3D que se corrige a 0 */}
           <motion.div
             initial="hidden"
             animate="show"
@@ -92,12 +109,14 @@ export default function Catalog() {
             ))}
           </motion.div>
 
+          {/* Panel de filtros (glassmorphism) */}
           <motion.div
             initial={{ opacity: 0, y: 60, rotateX: 28, filter: "blur(10px)" }}
             animate={{ opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" }}
             transition={{ duration: DUR.hero, ease: EASE, delay: 0.9 }}
             style={{ transformPerspective: 1000 }}
             className="flex w-full flex-col gap-6 rounded-3xl border border-warm-cream/15 bg-walnut-shadow/50 p-6 backdrop-blur-xl will-change-transform">
+            {/* Chips de tipo: carrusel táctil horizontal; el chip activo usa layoutId para deslizar el fondo entre chips */}
             <div className="hide-scrollbar flex touch-pan-x overflow-x-auto whitespace-nowrap gap-3">
               {TIPOS.map((t) => (
                 <motion.button
@@ -122,6 +141,7 @@ export default function Catalog() {
               ))}
             </div>
 
+            {/* Búsqueda + selects; en móvil apilados, en escritorio en fila */}
             <div className="flex flex-col gap-5 md:flex-row md:gap-8">
               <input
                 type="search"
@@ -133,6 +153,7 @@ export default function Catalog() {
               />
               <select
                 value={ciudad}
+                // Al cambiar de ciudad se reinicia la zona (la lista de zonas cambia)
                 onChange={(e) => {
                   setCiudad(e.target.value as (typeof CIUDADES)[number]);
                   setZona("Todas");
@@ -165,6 +186,7 @@ export default function Catalog() {
         </div>
       </section>
 
+      {/* GRID DE PROPIEDADES: apiladas en móvil (flex-col), 2 columnas en md y 3 en xl */}
       <section id="propiedades" className="w-full max-w-full overflow-x-hidden px-5 py-16 md:px-10">
         <div className="mb-10 flex flex-col gap-3 border-b border-dashed border-cork-border pb-6 md:flex-row md:items-end md:justify-between">
           <h2 className="heading">Propiedades</h2>
@@ -175,6 +197,7 @@ export default function Catalog() {
           <p className="body-copy py-16">No hay propiedades con esos filtros. Ajusta tu búsqueda.</p>
         ) : (
           <div className="flex flex-col gap-6 md:grid md:grid-cols-2 xl:grid-cols-3">
+            {/* AnimatePresence anima la salida de tarjetas filtradas; "layout" reacomoda las restantes; delay escalonado por columna */}
             <AnimatePresence mode="popLayout">
               {lista.map((p, i) => (
                 <motion.div

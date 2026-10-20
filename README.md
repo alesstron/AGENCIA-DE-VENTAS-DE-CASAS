@@ -54,6 +54,10 @@ npm run start    # sirve el build de producción
 
 Configuración: el número de WhatsApp (`WHATSAPP_NUMBER`) y el nombre de la empresa (`COMPANY_NAME`) están en `src/lib/contact.ts`. No se requieren variables de entorno.
 
+## Código documentado
+
+Todos los archivos de `src/` y `next.config.js` incluyen comentarios en español sobre arquitectura, flujo de datos (catálogo → filtros → ficha), sistema multi-moneda, animaciones y cabeceras de seguridad.
+
 ## Despliegue en Vercel
 
 1. Importar el repositorio de GitHub en Vercel (preset *Next.js* detectado automáticamente).

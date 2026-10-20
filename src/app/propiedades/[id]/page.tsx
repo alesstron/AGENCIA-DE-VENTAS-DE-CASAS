@@ -1,3 +1,11 @@
+/**
+ * Ficha de propiedad: ruta dinámica /propiedades/[id] (Server Component, generada estáticamente).
+ *  - generateStaticParams: pre-renderiza una página por cada propiedad del catálogo (SSG).
+ *  - generateMetadata: título y descripción SEO propios de cada propiedad.
+ *  - En Next 15 `params` es una Promesa, por eso se usa `await params`.
+ * Secciones: cabecera (título/precio/WhatsApp) + galería, descripción, especificaciones, amenidades,
+ * ficha técnica (TechTabs), matriz de inversión, entorno VIP y formulario de contacto lateral.
+ */
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import type { Metadata } from "next";
@@ -9,17 +17,21 @@ import QuickActions from "@/components/QuickActions";
 import { Price } from "@/components/currency";
 import { getPropertyById, pricePerM2, properties } from "@/data/properties";
 
+// Tipo de los parámetros de ruta (Promesa en Next 15).
 type Params = { params: Promise<{ id: string }> };
 
+// Lista de slugs a pre-renderizar en build; un id desconocido no se genera y cae en notFound().
 export function generateStaticParams() {
   return properties.map((p) => ({ id: p.id }));
 }
 
+// Metadatos dinámicos por propiedad (SEO y pestaña del navegador).
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const p = getPropertyById((await params).id);
   return p ? { title: `${p.titulo} — Dubai Luxury Estates`, description: p.descripcion } : {};
 }
 
+// Íconos SVG de amenidades: la primera expresión regular que coincide con el nombre elige el trazado.
 const ICONS: [RegExp, string][] = [
   [/helipuerto/i, "M12 3v18M5 7h14M5 17h14M8 7v10M16 7v10"],
   [/playa|muelle|amarre|lago|vista|piscina/i, "M2 15c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M2 19c2.5-2 4.5-2 7 0s4.5 2 7 0 4.5-2 6 0M12 3v8M9 6l3-3 3 3"],
@@ -33,13 +45,16 @@ const ICONS: [RegExp, string][] = [
   [/vino|bodega|cava/i, "M8 3h8v6a4 4 0 0 1-8 0zM12 13v8M8 21h8"],
   [/tenis|club/i, "M3 7h18v10H3zM12 7v10"],
 ];
+// Ícono genérico (estrella) si ninguna regla coincide.
 const DEFAULT_ICON = "M12 3l3 6 6 1-4.5 4.5L18 21l-6-3-6 3 1.5-6.5L3 10l6-1z";
 const iconFor = (name: string) => ICONS.find(([re]) => re.test(name))?.[1] ?? DEFAULT_ICON;
 
 export default async function PropertyPage({ params }: Params) {
+  // Resuelve la propiedad desde el slug de la URL; si no existe, muestra la página 404.
   const p = getPropertyById((await params).id);
   if (!p) notFound();
 
+  // Especificaciones técnicas como pares [etiqueta, valor]; el precio por m² se renderiza con <Price> para respetar la moneda elegida.
   const specs: [string, React.ReactNode][] = [
     ["Construcción", `${p.m2Construccion.toLocaleString("es")} m²`],
     ["Terreno", p.m2Terreno ? `${p.m2Terreno.toLocaleString("es")} m²` : "Unidad en torre"],
@@ -62,6 +77,7 @@ export default async function PropertyPage({ params }: Params) {
       <div className="flex w-full max-w-full flex-col gap-12 px-5 py-8 md:px-10 md:py-12">
         {/* Título, precio y acciones junto a una galería de altura acotada: todo visible sin scroll excesivo */}
         <div className="flex w-full max-w-full flex-col gap-8 border-b border-dashed border-cork-border pb-12 lg:grid lg:grid-cols-5 lg:items-center lg:gap-10">
+          {/* Columna de texto: en móvil va primero (order-1); en lg pasa a la derecha (2 de 5 columnas) */}
           <Reveal variant="flip" className="order-1 flex min-w-0 flex-col gap-5 lg:order-2 lg:col-span-2">
             <div className="flex flex-wrap items-center gap-3">
               <span
@@ -77,9 +93,11 @@ export default async function PropertyPage({ params }: Params) {
             </div>
             <h1 className="display break-words">{p.titulo}</h1>
             <p className="label">{p.ubicacion}</p>
+            {/* Precio en la moneda elegida + botón universal de WhatsApp y salto al formulario */}
             <QuickActions titulo={p.titulo} refId={p.ref} precioUSD={p.precioUSD} />
           </Reveal>
 
+          {/* Galería (3 de 5 columnas en lg): altura acotada con aspect 16/9 */}
           <Reveal variant="flip" className="order-2 min-w-0 lg:order-1 lg:col-span-3">
             <Gallery images={p.galeria} title={p.titulo} />
           </Reveal>
@@ -94,6 +112,7 @@ export default async function PropertyPage({ params }: Params) {
 
             <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Especificaciones técnicas</h2>
+              {/* Tarjetas de especificaciones: 2 columnas en móvil, 4 desde md */}
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {specs.map(([k, v]) => (
                   <div key={k} className="flex flex-col gap-3 rounded-2xl border border-cork-border bg-warm-cream/[0.03] p-5 backdrop-blur-md transition-colors duration-300 hover:bg-bark-brown/60">
@@ -107,6 +126,7 @@ export default async function PropertyPage({ params }: Params) {
             <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Amenidades VIP</h2>
               <ul className="flex flex-col gap-3 md:grid md:grid-cols-2">
+                {/* Amenidades con ícono elegido por iconFor() */}
                 {p.amenidades.map((a) => (
                   <li key={a} className="flex items-center gap-4 rounded-2xl border border-cork-border bg-warm-cream/[0.03] p-4 backdrop-blur-md transition-colors duration-300 hover:bg-bark-brown/60">
                     <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
@@ -120,11 +140,14 @@ export default async function PropertyPage({ params }: Params) {
 
             <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Ficha técnica avanzada</h2>
+              {/* Pestañas: Planos (selector de nivel), Inventario y Especificaciones de lujo */}
               <TechTabs niveles={p.distribucion} inventario={p.inventario} lujo={p.lujo} />
             </Reveal>
 
             <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Matriz de inversión</h2>
+              {/* Matriz de inversión. Datos estáticos de `p.inversion`; aquí solo se derivan:
+                  ingreso anual = precio * ROI / 100 y valor a 3 años = precio * (1 + plusvalía / 100) */}
               <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
                 <Metric label="ROI anual estimado" sub={<><Price usd={Math.round((p.precioUSD * p.inversion.roiAnual) / 100)} /> / año</>}>
                   <CountUp value={p.inversion.roiAnual} decimals={1} suffix="%" />
@@ -147,6 +170,7 @@ export default async function PropertyPage({ params }: Params) {
             <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Entorno VIP</h2>
               <ul className="flex flex-col gap-3">
+                {/* La barra marca el tiempo de trayecto relativo a 40 min (tope 100 %) */}
                 {p.entorno.map((e) => (
                   <li key={e.lugar} className="flex flex-col gap-3 rounded-2xl border border-cork-border bg-warm-cream/[0.03] p-4 backdrop-blur-md">
                     <div className="flex items-start justify-between gap-4">
@@ -170,6 +194,7 @@ export default async function PropertyPage({ params }: Params) {
             </Reveal>
           </div>
 
+          {/* Formulario lateral: pegajoso (sticky) en pantallas grandes; abre WhatsApp al enviar */}
           <aside className="w-full lg:sticky lg:top-24 lg:h-fit lg:w-[400px] lg:shrink-0">
             <Reveal delay={0.1}>
               <ContactForm titulo={p.titulo} refId={p.ref} precioUSD={p.precioUSD} />
@@ -181,6 +206,7 @@ export default async function PropertyPage({ params }: Params) {
   );
 }
 
+// Tarjeta de métrica reutilizable de la matriz de inversión.
 function Metric({ label, sub, children }: { label: string; sub: React.ReactNode; children: React.ReactNode }) {
   return (
     <div className="flex flex-col gap-3 rounded-3xl border border-cork-border bg-warm-cream/[0.03] p-6 backdrop-blur-md">

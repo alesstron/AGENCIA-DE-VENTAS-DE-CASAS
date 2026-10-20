@@ -1,10 +1,16 @@
 "use client";
 
+/**
+ * Pie de página: marca, botón de WhatsApp, enlaces a tres textos legales (Aviso Legal, Privacidad, Términos)
+ * mostrados en un modal accesible, copyright y exención de responsabilidad sobre precios y disponibilidad.
+ */
 import { useEffect, useState } from "react";
 import { COMPANY_NAME, whatsappUrl } from "@/lib/contact";
 
+// Claves de los documentos legales.
 type DocKey = "aviso" | "privacidad" | "terminos";
 
+// Contenido de los modales: título y secciones [encabezado, texto].
 const DOCS: Record<DocKey, { titulo: string; secciones: [string, string][] }> = {
   aviso: {
     titulo: "Aviso Legal",
@@ -38,8 +44,10 @@ const DOCS: Record<DocKey, { titulo: string; secciones: [string, string][] }> = 
 };
 
 export default function Footer() {
+  // Documento abierto (null = modal cerrado).
   const [open, setOpen] = useState<DocKey | null>(null);
 
+  // Con el modal abierto: Escape lo cierra y se bloquea el scroll del body; se restaura al cerrar.
   useEffect(() => {
     if (!open) return;
     const onKey = (e: KeyboardEvent) => e.key === "Escape" && setOpen(null);
@@ -84,6 +92,7 @@ export default function Footer() {
         </p>
       </div>
 
+      {/* Modal: clic en el fondo o en "Cerrar" lo cierra; el panel detiene la propagación del clic */}
       {doc && (
         <div
           role="dialog"

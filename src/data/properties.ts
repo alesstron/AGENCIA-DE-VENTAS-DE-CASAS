@@ -1,22 +1,38 @@
+/**
+ * Catálogo de propiedades y utilidades de datos (única fuente de verdad del sitio).
+ *
+ * Flujo de datos:
+ *   base (Dubái) + baseCaracas  --withRooftop-->  + extras[id] (inversión, lujo, entorno)  -->  `properties`
+ *   `properties` alimenta: Catalog (filtros y grid), PropertyCard, /propiedades/[id] (generateStaticParams)
+ *   y sus componentes (Gallery, TechTabs, QuickActions, ContactForm).
+ * Los precios se guardan siempre en USD; la conversión a EUR/VES se hace en components/currency.tsx.
+ */
+
+// Categorías de propiedad y estado comercial (usados por filtros, etiquetas y tarjetas).
 export type PropertyType = "Villa" | "Penthouse" | "Mansión";
 export type PropertyStatus = "Disponible" | "Reservada";
 
+// Zona de un nivel del plano (nombre y superficie en m²); el plano se dibuja proporcional a m2.
 export interface Zone {
   nombre: string;
   m2: number;
 }
 
+// Nivel/planta de la distribución con sus zonas (alimenta la pestaña "Planos" de TechTabs).
 export interface Level {
   nivel: string;
   zonas: Zone[];
 }
 
+// Datos de la matriz de inversión de la ficha. Son estimaciones estáticas ilustrativas, NO se calculan:
+// el ingreso anual se deriva en la página como precioUSD * roiAnual / 100 y el valor a 3 años como precioUSD * (1 + plusvalia3a / 100).
 export interface Inversion {
   roiAnual: number; // % anual estimado
   plusvalia3a: number; // % proyectado a 3 años
   esquemaPago: "60/40" | "50/50";
 }
 
+// Especificaciones de acabados de lujo (pestaña "Especificaciones de lujo").
 export interface EspecLujo {
   suelo: string;
   cristales: string;
@@ -25,6 +41,7 @@ export interface EspecLujo {
   alturaTecho: number; // metros
 }
 
+// Punto de interés cercano ("Entorno VIP"): tiempo en minutos y distancia en km, aproximados.
 export interface Distancia {
   lugar: string;
   categoria: "Aeropuerto" | "Marina" | "Centro financiero" | "Colegio internacional" | "Ocio";
@@ -32,19 +49,22 @@ export interface Distancia {
   km: number;
 }
 
+// Bloque de datos de ficha que se mantiene aparte (`extras`) y se fusiona con cada propiedad por id.
 type Extras = { inversion: Inversion; lujo: EspecLujo; entorno: Distancia[] };
 
+// Ciudades del catálogo: base del filtro por ciudad y de las zonas dependientes.
 export type Ciudad = "Dubái" | "Caracas";
 
+// Modelo completo de una propiedad.
 export interface Property extends Extras {
-  id: string;
+  id: string; // slug usado en la URL /propiedades/[id]
   ciudad: Ciudad;
-  ref: string;
+  ref: string; // referencia comercial (DLX-xxxx Dubái, CCS-xxxx Caracas); se envía por WhatsApp
   titulo: string;
   tipo: PropertyType;
   ubicacion: string;
-  zona: string;
-  precioUSD: number;
+  zona: string; // barrio/zona, base del filtro de zonas
+  precioUSD: number; // precio de lista en USD; el resto de monedas se derivan de este valor
   estado: PropertyStatus;
   m2Construccion: number;
   m2Terreno: number;
@@ -54,20 +74,24 @@ export interface Property extends Extras {
   piscinaPrivada: boolean;
   ascensorPrivado: boolean;
   amenidades: string[];
-  galeria: string[];
+  galeria: string[]; // URLs de Unsplash (ancho w=1600); la primera es la portada de la tarjeta
   descripcion: string;
   inventario: string[];
-  distribucion: Level[];
+  distribucion: Level[]; // niveles del plano (se añade "Rooftop / Piscina" con withRooftop)
 }
 
 /** Tipo de cambio de referencia USD → AED (paridad oficial). */
 export const USD_TO_AED = 3.6725;
 
+// Construye la URL de una foto de Unsplash a partir de su ID (recortada, calidad 80, ancho w).
+// Gallery sustituye "w=1600" por "w=400" para las miniaturas.
 const u = (id: string, w = 1600) =>
   `https://images.unsplash.com/photo-${id}?auto=format&fit=crop&w=${w}&q=80`;
 
+// Propiedad sin los campos que se añaden después (extras y ciudad).
 type Base = Omit<Property, keyof Extras | "ciudad">;
 
+// ---- Catálogo de Dubái (8 propiedades) ----
 const base: Base[] = [
   {
     id: "palm-jumeirah-signature-villa",
@@ -270,6 +294,7 @@ const base: Base[] = [
   },
 ];
 
+// ---- Catálogo de Caracas (4 propiedades) ----
 const baseCaracas: Base[] = [
   {
     id: "caracas-country-club-mansion",
@@ -372,8 +397,10 @@ const baseCaracas: Base[] = [
   },
 ];
 
+// Atajo para crear un punto de interés del entorno.
 const d = (lugar: string, categoria: Distancia["categoria"], minutos: number, km: number): Distancia => ({ lugar, categoria, minutos, km });
 
+// Extras por id de propiedad: inversión (ROI anual %, plusvalía a 3 años %, esquema de pago), acabados de lujo y entorno.
 // Cifras de inversión y distancias: estimaciones ilustrativas (no constituyen garantía de rentabilidad).
 const extras: Record<string, Extras> = {
   "palm-jumeirah-signature-villa": {
@@ -450,17 +477,22 @@ const withRooftop = (b: Base): Base =>
       }
     : b;
 
+// Catálogo final: une cada propiedad base con su ciudad, el nivel Rooftop (si tiene piscina) y sus extras por id.
 export const properties: Property[] = [
   ...base.map((b): Property => ({ ...withRooftop(b), ciudad: "Dubái", ...extras[b.id] })),
   ...baseCaracas.map((b): Property => ({ ...withRooftop(b), ciudad: "Caracas", ...extras[b.id] })),
 ];
 
+// Busca una propiedad por slug; devuelve undefined si no existe (la ficha responde con notFound()).
 export const getPropertyById =(id: string) => properties.find((p) => p.id === id);
 
+// Formateo fijo en USD (sin decimales) y equivalencia en dírhams AED con la paridad oficial.
+// El formato en la moneda elegida por el usuario lo gestiona currency.tsx.
 export const formatUSD = (n: number) =>
   new Intl.NumberFormat("en-US", { style: "currency", currency: "USD", maximumFractionDigits: 0 }).format(n);
 
 export const formatAED = (usd: number) =>
   `AED ${new Intl.NumberFormat("en-US", { maximumFractionDigits: 0 }).format(usd * USD_TO_AED)}`;
 
+// Precio por metro cuadrado construido, en USD (se muestra convertido con <Price />).
 export const pricePerM2 = (p: Property) => Math.round(p.precioUSD / p.m2Construccion);

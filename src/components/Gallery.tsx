@@ -1,5 +1,11 @@
 "use client";
 
+/**
+ * Galería de la ficha: imagen principal con transición direccional + carrusel de miniaturas.
+ * Estado `[active, dir]`: índice de la foto visible y dirección (1 avanza / -1 retrocede),
+ * que define de qué lado entra y sale la imagen en la animación (variants con `custom`).
+ * Navegación: flechas, miniaturas y arrastre horizontal (drag="x"); `touch-pan-y` mantiene el scroll vertical en móvil.
+ */
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { DUR, EASE } from "./motion";
@@ -7,11 +13,14 @@ import { DUR, EASE } from "./motion";
 export default function Gallery({ images, title }: { images: string[]; title: string }) {
   const [[active, dir], setState] = useState<[number, number]>([0, 0]);
 
+  // Salta a una foto concreta (miniatura): la dirección depende de si el índice es mayor o menor que el actual.
   const go = (i: number) => setState([(i + images.length) % images.length, i > active ? 1 : -1]);
+  // Avanza (+1) o retrocede (-1) de forma circular con el módulo sobre el total de fotos.
   const step = (d: number) => setState([(active + d + images.length) % images.length, d]);
 
   return (
     <div className="flex w-full max-w-full flex-col gap-3">
+      {/* Visor: 16/9 con altura máxima 480/500 px, fondo bark-brown y object-cover (sin deformar la imagen) */}
       <div className="relative aspect-[16/9] max-h-[480px] w-full overflow-hidden rounded-3xl bg-bark-brown shadow-2xl shadow-black/70 md:max-h-[500px]">
         <AnimatePresence initial={false} custom={dir} mode="popLayout">
           <motion.img
@@ -31,6 +40,7 @@ export default function Gallery({ images, title }: { images: string[]; title: st
             drag="x"
             dragConstraints={{ left: 0, right: 0 }}
             dragElastic={0.2}
+            // Gesto de arrastre: más de 60 px a la izquierda = siguiente; a la derecha = anterior
             onDragEnd={(_, info) => {
               if (info.offset.x < -60) step(1);
               else if (info.offset.x > 60) step(-1);
@@ -40,6 +50,7 @@ export default function Gallery({ images, title }: { images: string[]; title: st
           />
         </AnimatePresence>
 
+        {/* Controles: anterior, siguiente y contador */}
         <button type="button" onClick={() => step(-1)} aria-label="Foto anterior" className="label absolute left-3 top-1/2 z-10 -translate-y-1/2 rounded-full border border-warm-cream/30 bg-walnut-shadow/50 px-3.5 py-2.5 backdrop-blur-md transition-transform active:scale-90">
           ←
         </button>
@@ -51,6 +62,7 @@ export default function Gallery({ images, title }: { images: string[]; title: st
         </span>
       </div>
 
+      {/* Miniaturas: carrusel táctil horizontal; usan la versión w=400 de la imagen para ahorrar datos */}
       <div className="hide-scrollbar flex touch-pan-x overflow-x-auto whitespace-nowrap gap-3">
         {images.map((src, i) => (
           <motion.button

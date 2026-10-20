@@ -1,3 +1,8 @@
+/**
+ * Tarjeta de propiedad del catálogo (Server Component). Apilada y a ancho completo en móvil;
+ * el grid lo define Catalog. La portada es la primera foto de la galería, con object-cover sobre fondo bark-brown.
+ * Precio y referencia en AED/USD se renderizan con <Price>/<PriceRef> para seguir la moneda elegida.
+ */
 import Link from "next/link";
 import type { Property } from "@/data/properties";
 import { Price, PriceRef } from "./currency";
@@ -50,6 +55,7 @@ export default function PropertyCard({ p }: { p: Property }) {
   );
 }
 
+// Par etiqueta/valor de la cuadrícula de datos clave (m², habitaciones, baños).
 function Spec({ k, v }: { k: string; v: string | number }) {
   return (
     <div className="flex flex-col gap-1">

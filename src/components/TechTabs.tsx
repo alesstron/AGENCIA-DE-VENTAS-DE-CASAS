@@ -1,5 +1,12 @@
 "use client";
 
+/**
+ * Ficha técnica con tres pestañas:
+ *  - Planos: selector de nivel y esquema proporcional (cada zona crece según sus m² con flex-grow; no es a escala).
+ *  - Inventario: lista de elementos incluidos.
+ *  - Lujo: acabados y especificaciones (suelo, cristales, climatización, domótica, altura de techos).
+ * Animaciones: cambio de pestaña con AnimatePresence (mode="wait") y entrada escalonada de elementos.
+ */
 import { useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import type { EspecLujo, Level } from "@/data/properties";
@@ -8,6 +15,7 @@ import { DUR, EASE } from "./motion";
 const TABS = ["Planos", "Inventario", "Lujo"] as const;
 type Tab = (typeof TABS)[number];
 
+// Variantes comunes de transición entre pestañas (rotación 3D suave + blur).
 const panel = {
   initial: { opacity: 0, y: 24, rotateX: -10, filter: "blur(6px)" },
   animate: { opacity: 1, y: 0, rotateX: 0, filter: "blur(0px)" },
@@ -17,9 +25,11 @@ const panel = {
 export default function TechTabs({ niveles, inventario, lujo }: { niveles: Level[]; inventario: string[]; lujo: EspecLujo }) {
   const [tab, setTab] = useState<Tab>("Planos");
   const [nivel, setNivel] = useState(0);
+  // Nivel seleccionado y superficie total sumada de sus zonas.
   const level = niveles[nivel];
   const total = level.zonas.reduce((a, z) => a + z.m2, 0);
 
+  // Filas de la pestaña "Lujo".
   const lujoRows: [string, string][] = [
     ["Tipo de suelo", lujo.suelo],
     ["Cristales", lujo.cristales],
@@ -30,6 +40,7 @@ export default function TechTabs({ niveles, inventario, lujo }: { niveles: Level
 
   return (
     <div className="flex w-full max-w-full flex-col gap-6">
+      {/* Pestañas: carrusel táctil; la pastilla activa se desliza con layoutId */}
       <div role="tablist" className="hide-scrollbar flex touch-pan-x overflow-x-auto whitespace-nowrap gap-3">
         {TABS.map((t) => (
           <motion.button
@@ -80,6 +91,7 @@ export default function TechTabs({ niveles, inventario, lujo }: { niveles: Level
                     transition={{ duration: DUR.base, ease: EASE }}
                     className="flex w-full max-w-full flex-wrap gap-2 rounded-3xl border border-dashed border-driftwood bg-warm-cream/[0.03] p-2 backdrop-blur-md"
                   >
+                    {/* flexGrow proporcional a los m² y flexBasis mínima de 90 px para que las zonas pequeñas sean legibles */}
                     {level.zonas.map((z, i) => (
                       <motion.div
                         key={z.nombre}

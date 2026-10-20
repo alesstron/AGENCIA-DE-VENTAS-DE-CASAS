@@ -1,9 +1,15 @@
 "use client";
 
+/**
+ * Formulario "Agendar visita / Cotizar". No envía datos a ningún servidor: construye un mensaje,
+ * lo sanea con sanitize() y abre WhatsApp (whatsappUrl) para que el usuario lo envíe él mismo.
+ * El precio se incluye en la moneda elegida en el selector (y en USD como referencia si es otra).
+ */
 import { useState } from "react";
 import { sanitize, whatsappUrl } from "@/lib/contact";
 import { CurrencySelect, useCurrency } from "./currency";
 
+// Campos solo con borde inferior (sistema de diseño); 16 px evita el zoom automático de iOS al enfocar.
 const fieldClass =
   "w-full rounded-none border-0 border-b border-warm-cream bg-transparent px-0.5 py-2 text-[16px] font-medium uppercase text-warm-cream outline-none placeholder:text-driftwood focus:border-b-2";
 
@@ -15,11 +21,13 @@ export default function ContactForm({ titulo, refId, precioUSD, url }: { titulo:
   const [tipo, setTipo] = useState("Agendar visita privada");
   const [nota, setNota] = useState("");
 
+  // Envío: valida el nombre, limpia cada campo y compone el mensaje línea a línea.
   function enviar(e: React.FormEvent) {
     e.preventDefault();
     const n = sanitize(nombre, 80);
     if (!n) return;
     const tel = sanitize(telefono, 30).replace(/[^\d+\s()-]/g, "");
+    // Las líneas vacías (false/""/undefined) se descartan con filter(Boolean)
     const lineas = [
       `Hola, soy ${n}.`,
       `Quiero: ${sanitize(tipo, 40).toLowerCase()}.`,
@@ -30,6 +38,7 @@ export default function ContactForm({ titulo, refId, precioUSD, url }: { titulo:
       nota && sanitize(nota, 300) && `Comentario: ${sanitize(nota, 300)}`,
       url && `Ficha: ${sanitize(url, 200)}`,
     ].filter(Boolean);
+    // noopener/noreferrer: la pestaña de WhatsApp no recibe acceso a esta página
     window.open(whatsappUrl(lineas.join("\n")),"_blank", "noopener,noreferrer");
   }
 
