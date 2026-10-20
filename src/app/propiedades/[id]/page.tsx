@@ -3,7 +3,11 @@ import { notFound } from "next/navigation";
 import type { Metadata } from "next";
 import Gallery from "@/components/Gallery";
 import ContactForm from "@/components/ContactForm";
-import { formatAED, formatUSD, getPropertyById, pricePerM2, properties } from "@/data/properties";
+import TechTabs from "@/components/TechTabs";
+import { CountUp, Reveal } from "@/components/motion";
+import QuickActions from "@/components/QuickActions";
+import { Price } from "@/components/currency";
+import { getPropertyById, pricePerM2, properties } from "@/data/properties";
 
 type Params = { params: Promise<{ id: string }> };
 
@@ -36,7 +40,7 @@ export default async function PropertyPage({ params }: Params) {
   const p = getPropertyById((await params).id);
   if (!p) notFound();
 
-  const specs: [string, string][] = [
+  const specs: [string, React.ReactNode][] = [
     ["Construcción", `${p.m2Construccion.toLocaleString("es")} m²`],
     ["Terreno", p.m2Terreno ? `${p.m2Terreno.toLocaleString("es")} m²` : "Unidad en torre"],
     ["Habitaciones", String(p.habitaciones)],
@@ -44,7 +48,7 @@ export default async function PropertyPage({ params }: Params) {
     ["Estacionamientos", String(p.estacionamientos)],
     ["Piscina privada", p.piscinaPrivada ? "Sí" : "No"],
     ["Ascensor privado", p.ascensorPrivado ? "Sí" : "No"],
-    ["Precio por m²", formatUSD(pricePerM2(p))],
+    ["Precio por m²", <Price key="pm2" usd={pricePerM2(p)} />],
   ];
 
   return (
@@ -56,10 +60,9 @@ export default async function PropertyPage({ params }: Params) {
       </div>
 
       <div className="flex w-full max-w-full flex-col gap-12 px-5 py-8 md:px-10 md:py-12">
-        <Gallery images={p.galeria} title={p.titulo} />
-
-        <section className="flex flex-col gap-6 border-b border-dashed border-cork-border pb-12 md:flex-row md:items-end md:justify-between">
-          <div className="flex flex-col gap-4">
+        {/* Título, precio y acciones junto a una galería de altura acotada: todo visible sin scroll excesivo */}
+        <div className="flex w-full max-w-full flex-col gap-8 border-b border-dashed border-cork-border pb-12 lg:grid lg:grid-cols-5 lg:items-center lg:gap-10">
+          <Reveal variant="flip" className="order-1 flex min-w-0 flex-col gap-5 lg:order-2 lg:col-span-2">
             <div className="flex flex-wrap items-center gap-3">
               <span
                 className={`label rounded-full px-3 py-1.5 text-[10px] ${
@@ -72,39 +75,40 @@ export default async function PropertyPage({ params }: Params) {
                 {p.tipo} · Ref. {p.ref}
               </span>
             </div>
-            <h1 className="display max-w-3xl">{p.titulo}</h1>
+            <h1 className="display break-words">{p.titulo}</h1>
             <p className="label">{p.ubicacion}</p>
-          </div>
-          <div className="flex flex-col gap-1 md:text-right">
-            <p className="heading">{formatUSD(p.precioUSD)}</p>
-            <p className="label text-driftwood">≈ {formatAED(p.precioUSD)}</p>
-          </div>
-        </section>
+            <QuickActions titulo={p.titulo} refId={p.ref} precioUSD={p.precioUSD} />
+          </Reveal>
+
+          <Reveal variant="flip" className="order-2 min-w-0 lg:order-1 lg:col-span-3">
+            <Gallery images={p.galeria} title={p.titulo} />
+          </Reveal>
+        </div>
 
         <section className="flex flex-col gap-10 lg:flex-row lg:gap-16">
           <div className="flex min-w-0 flex-1 flex-col gap-12">
-            <div className="flex flex-col gap-6">
+            <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Descripción ejecutiva</h2>
               <p className="body-copy max-w-2xl">{p.descripcion}</p>
-            </div>
+            </Reveal>
 
-            <div className="flex flex-col gap-6">
+            <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Especificaciones técnicas</h2>
               <div className="grid grid-cols-2 gap-3 md:grid-cols-4">
                 {specs.map(([k, v]) => (
-                  <div key={k} className="flex flex-col gap-3 rounded-card border border-cork-border p-5">
+                  <div key={k} className="flex flex-col gap-3 rounded-2xl border border-cork-border bg-warm-cream/[0.03] p-5 backdrop-blur-md transition-colors duration-300 hover:bg-bark-brown/60">
                     <p className="label text-[10px] text-driftwood">{k}</p>
                     <p className="text-[18px] font-medium uppercase leading-none">{v}</p>
                   </div>
                 ))}
               </div>
-            </div>
+            </Reveal>
 
-            <div className="flex flex-col gap-6">
+            <Reveal className="flex flex-col gap-6">
               <h2 className="heading">Amenidades VIP</h2>
               <ul className="flex flex-col gap-3 md:grid md:grid-cols-2">
                 {p.amenidades.map((a) => (
-                  <li key={a} className="flex items-center gap-4 rounded-card border border-cork-border p-4">
+                  <li key={a} className="flex items-center gap-4 rounded-2xl border border-cork-border bg-warm-cream/[0.03] p-4 backdrop-blur-md transition-colors duration-300 hover:bg-bark-brown/60">
                     <svg viewBox="0 0 24 24" className="h-6 w-6 shrink-0" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden>
                       <path d={iconFor(a)} />
                     </svg>
@@ -112,47 +116,77 @@ export default async function PropertyPage({ params }: Params) {
                   </li>
                 ))}
               </ul>
-            </div>
+            </Reveal>
 
-            <div className="flex flex-col gap-6">
-              <h2 className="heading">Inventario</h2>
-              <ul className="flex flex-col">
-                {p.inventario.map((i) => (
-                  <li key={i} className="border-b border-dashed border-cork-border py-3 text-[17px]">
-                    {i}
+            <Reveal className="flex flex-col gap-6">
+              <h2 className="heading">Ficha técnica avanzada</h2>
+              <TechTabs niveles={p.distribucion} inventario={p.inventario} lujo={p.lujo} />
+            </Reveal>
+
+            <Reveal className="flex flex-col gap-6">
+              <h2 className="heading">Matriz de inversión</h2>
+              <div className="grid grid-cols-1 gap-3 md:grid-cols-3">
+                <Metric label="ROI anual estimado" sub={<><Price usd={Math.round((p.precioUSD * p.inversion.roiAnual) / 100)} /> / año</>}>
+                  <CountUp value={p.inversion.roiAnual} decimals={1} suffix="%" />
+                </Metric>
+                <Metric label="Plusvalía proyectada a 3 años" sub={<>Valor estimado <Price usd={Math.round(p.precioUSD * (1 + p.inversion.plusvalia3a / 100))} /></>}>
+                  <CountUp value={p.inversion.plusvalia3a} suffix="%" />
+                </Metric>
+                <Metric
+                  label="Esquema de pago"
+                  sub={p.inversion.esquemaPago === "60/40" ? "60% inicial · 40% a la entrega" : "50% inicial · 50% a la entrega"}
+                >
+                  Plan {p.inversion.esquemaPago}
+                </Metric>
+              </div>
+              <p className="text-[10px] font-medium uppercase leading-[1.3] text-ember-accent">
+                * Cifras estimadas con fines ilustrativos; no constituyen garantía de rentabilidad ni asesoría financiera.
+              </p>
+            </Reveal>
+
+            <Reveal className="flex flex-col gap-6">
+              <h2 className="heading">Entorno VIP</h2>
+              <ul className="flex flex-col gap-3">
+                {p.entorno.map((e) => (
+                  <li key={e.lugar} className="flex flex-col gap-3 rounded-2xl border border-cork-border bg-warm-cream/[0.03] p-4 backdrop-blur-md">
+                    <div className="flex items-start justify-between gap-4">
+                      <div className="flex min-w-0 flex-col gap-1">
+                        <span className="label text-[10px] text-driftwood">{e.categoria}</span>
+                        <span className="text-[16px] font-medium uppercase leading-[1.1] break-words">{e.lugar}</span>
+                      </div>
+                      <span className="label shrink-0 text-right">
+                        {e.minutos} min
+                        <br />
+                        <span className="text-driftwood">{e.km} km</span>
+                      </span>
+                    </div>
+                    <div className="h-px w-full bg-cork-border">
+                      <div className="h-px bg-warm-cream" style={{ width: `${Math.min(100, (e.minutos / 40) * 100)}%` }} />
+                    </div>
                   </li>
                 ))}
               </ul>
-            </div>
-
-            <div className="flex flex-col gap-6">
-              <h2 className="heading">Plano / Distribución</h2>
-              <p className="label text-driftwood">Esquema proporcional por superficie — no a escala arquitectónica</p>
-              {p.distribucion.map((lvl) => (
-                <div key={lvl.nivel} className="flex flex-col gap-3">
-                  <p className="label">{lvl.nivel}</p>
-                  <div className="flex w-full max-w-full flex-wrap gap-2 rounded-card border border-dashed border-driftwood p-2">
-                    {lvl.zonas.map((z) => (
-                      <div
-                        key={z.nombre}
-                        style={{ flexGrow: z.m2, flexBasis: `${Math.max(z.m2 / 4, 90)}px`, minHeight: 80 }}
-                        className="flex min-w-0 flex-col justify-between gap-2 rounded-card border border-dashed border-cork-border bg-bark-brown/40 p-3"
-                      >
-                        <span className="label text-[11px]">{z.nombre}</span>
-                        <span className="label text-[11px] text-driftwood">{z.m2} m²</span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              ))}
-            </div>
+              <p className="label text-[10px] text-driftwood">Tiempos aproximados en vehículo, sin tráfico.</p>
+            </Reveal>
           </div>
 
           <aside className="w-full lg:sticky lg:top-24 lg:h-fit lg:w-[400px] lg:shrink-0">
-            <ContactForm titulo={p.titulo} refId={p.ref} />
+            <Reveal delay={0.1}>
+              <ContactForm titulo={p.titulo} refId={p.ref} precioUSD={p.precioUSD} />
+            </Reveal>
           </aside>
         </section>
       </div>
+    </div>
+  );
+}
+
+function Metric({ label, sub, children }: { label: string; sub: React.ReactNode; children: React.ReactNode }) {
+  return (
+    <div className="flex flex-col gap-3 rounded-3xl border border-cork-border bg-warm-cream/[0.03] p-6 backdrop-blur-md">
+      <p className="label text-[10px] text-driftwood">{label}</p>
+      <p className="heading">{children}</p>
+      <p className="label text-[11px]">{sub}</p>
     </div>
   );
 }

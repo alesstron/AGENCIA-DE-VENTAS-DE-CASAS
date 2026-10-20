@@ -8,7 +8,8 @@
     "start": "next start"
   },
   "dependencies": {
-    "next": "15.5.4",
+    "framer-motion": "^14.4.0",
+    "next": "^15.5.28",
     "react": "19.1.1",
     "react-dom": "19.1.1"
   },
@@ -19,5 +20,8 @@
     "@types/react-dom": "^19",
     "tailwindcss": "^4.1.13",
     "typescript": "^5.9.2"
+  },
+  "overrides": {
+    "postcss": "^8.5.23"
   }
 }

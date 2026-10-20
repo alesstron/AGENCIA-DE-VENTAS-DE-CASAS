@@ -1,9 +1,10 @@
 import Link from "next/link";
-import { formatAED, formatUSD, type Property } from "@/data/properties";
+import type { Property } from "@/data/properties";
+import { Price, PriceRef } from "./currency";
 
 export default function PropertyCard({ p }: { p: Property }) {
   return (
-    <article className="flex w-full max-w-full flex-col overflow-hidden rounded-card border border-cork-border bg-walnut-shadow">
+    <article className="flex w-full max-w-full flex-col h-full overflow-hidden rounded-card border border-cork-border bg-walnut-shadow/80 backdrop-blur-md">
       <Link href={`/propiedades/${p.id}`} className="relative block aspect-[4/3] w-full overflow-hidden bg-bark-brown">
         <img src={p.galeria[0]} alt={p.titulo} loading="lazy" className="h-full w-full object-cover transition-transform duration-500 hover:scale-105" />
         <span
@@ -18,14 +19,18 @@ export default function PropertyCard({ p }: { p: Property }) {
       <div className="flex flex-1 flex-col gap-4 p-6">
         <div className="flex flex-col gap-2">
           <p className="label text-driftwood">
-            {p.tipo} · {p.zona}
+            {p.tipo} · {p.zona} · {p.ciudad}
           </p>
           <h3 className="text-[24px] font-medium uppercase leading-[1.09]">{p.titulo}</h3>
         </div>
 
         <div className="flex flex-col gap-1">
-          <p className="text-[24px] font-medium leading-none">{formatUSD(p.precioUSD)}</p>
-          <p className="label text-driftwood">≈ {formatAED(p.precioUSD)}</p>
+          <p className="text-[24px] font-medium leading-none">
+            <Price usd={p.precioUSD} />
+          </p>
+          <p className="label text-driftwood">
+            <PriceRef usd={p.precioUSD} />
+          </p>
         </div>
 
         <dl className="grid grid-cols-3 gap-3 border-y border-dashed border-cork-border py-4">
@@ -36,7 +41,7 @@ export default function PropertyCard({ p }: { p: Property }) {
 
         <Link
           href={`/propiedades/${p.id}`}
-          className="label mt-auto rounded-outlined border border-warm-cream px-4 py-3 text-center transition-colors hover:bg-bark-brown"
+          className="label mt-auto rounded-outlined border border-warm-cream px-4 py-3 text-center transition-all duration-300 hover:bg-bark-brown active:scale-[0.97]"
         >
           Ver ficha técnica / Agendar visita
         </Link>
